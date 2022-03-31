@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+  <!-- Head -->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Título -->
+    <title>Donate To Us!</title>
+    <!-- Bootstrap -->
+    <link href="vendor/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- web3.js -->
+    <script src="vendor/web3/dist/web3.min.js"></script>
+    <!-- Script da aplicação -->
+    <script src="app.js"></script>
+    <!-- TailWind CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss@1.9.6/dist/tailwind.min.css">
+    <!-- Google fonts -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet">
+
+    <!-- Ajustes CSS -->
+    <style>
+      /* Margin do main */
+      main {
+        margin-top: 60px;
+      }
+
+      /* Efeito "pending" */
+      .placeholder-item {
+          box-shadow: 0 4px 10px 0 rgba(33, 33, 33, 0.15);
+          border-radius: 4px;
+          height: 200px;
+          position: relative;
+          overflow: hidden;
+      }
+
+      .placeholder-item::before {
+          content: '';
+          display: block;
+          position: absolute;
+          left: -150px;
+          top: 0;
+          height: 100%;
+          width: 150px;
+          background: linear-gradient(to right, transparent 0%, #E8E8E8 50%, transparent 100%);
+          animation: load 1s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+      }
+
+      @keyframes load {
+        from {
+            left: -150px;
+        }
+        to   {
+            left: 100%;
+        }
+      }
+    </style>
+  </head>
+  <!-- Body -->
+  <body>
+    <!-- Nav bar do topo do site -->
+    <nav class="navbar navbar-dark fixed-top bg-blue-900 flex-md-nowrap p-0 shadow">
+      <!-- Logo (ou Título do site) -->
+      <a class="navbar-brand col-sm-3 col-md-2 mr-0"
+        style="padding-left: 10px;"
+        href="https://goblockchain.io/cursos/" 
+        target="_blank">
+          Funding Contract
+      </a>
+      <!-- "menu" para botões & endereço público da conta conectada -->
+      <ul class="navbar-nav px-3">
+        <!-- Endereço público da conta ethereum conectada -->
+        <li class="nav-item text-nowrap d-none d-sm-block">
+          <small><a class="nav-link" href="#"><span id="account" onclick="App.handleAccountClicked()"></span></a></small>
+        </li>
+      </ul>
+    </nav>
+    <!-- Restante do conteúdo do site -->
+    <div class="container-fluid">
+      <main role="main" class="col-lg-12 d-flex justify-content-center">
+        <!-- Mensagem de "Loading..." antes de carregar todas as informações  -->
+        <div id="loader" class="text-center">
+          <p class="text-center">Loading...</p>
+        </div>
+        <!-- Conteúdo definitivo, depois do carregamento  -->
+        <div id="content" class="hidden">
+          <!-- Informações recuperadas da conta do usuário e contrato -->
+          <div class="rounded bg-green-100 flex flex-col justify-center content-center items-center py-4 px-4">
+            <!-- Preço do ETH em USD (Feed da LinkChain) -->
+            <!-- <div class="flex-col space-y-2 items-center">
+              <p  class="text-gray-800 text-2xl">
+                <span>ETH price is now: US$</span>
+                <span id="ethPrice"></span>
+              </p>
+            </div> -->
+            <!-- Saldo da conta do usuário -->
+            <div class="flex-col py-2 items-center">
+              <!-- Saldo somente em ETH -->
+              <p  class="text-gray-800 text-l">
+                <span>Your account balance is:</span>
+                <span id="ethBalance"></span>
+                <span>ETH</span>
+              </p>
+              <!-- Saldo em ETH e em USD -->
+              <!-- <p  class="text-gray-800 text-l">
+                <span>Your account balance is:</span>
+                <span id="ethBalance"></span>
+                <span>ETH - (US$</span>
+                <span id="usdBalance"></span>
+                <span>)</span>
+              </p> -->
+            </div>
+            
+            <!-- Usuário clicou em doar em ETH: barra de carregamento -->
+            <div id="fundEthPending" class="hidden placeholder-item flex w-full h-auto justify-center content-center items-center py-2 m-1">
+              Pending...
+            </div>
+
+            <!-- Formulário p/ doar em ETH -->
+            <div id="fundEthContent" class="flex justify-center content-center items-center py-1">
+              <!-- Label: instrução p/ doar em ETH -->
+              <label id="inputEthValueLabel" for="inputEthValue" class="px-2">
+                Value to fund (in ETH):
+              </label>
+              <!-- Input p/ digitar o valor a ser doado em ETH -->
+              <input type="number" id="inputEthValue" class="rounded bg-green-200 py-2 px-2">
+              <!-- Botão de doação em ETH -->
+              <button id="fundEthButton" onclick="App.handleClickEth()" class="rounded bg-green-500 hover:bg-green-700 py-2 px-2 text-white">
+                Fund!
+              </button>
+            </div>
+
+            <!-- Usuário clicou em doar em USD: barra de carregamento -->
+            <div id="fundUsdPending" class="hidden placeholder-item flex w-full h-auto justify-center content-center items-center py-2 m-1">
+              Pending...
+            </div>
+            
+            <!-- Formulário p/ doar em USD -->
+            <!-- <div id="fundUsdContent" class=" flex justify-center content-center items-center py-1">
+              <label id="inputUsdValueLabel" for="inputUsdValue" class="px-2">
+                Value to fund (in USD):
+              </label>
+              <input type="number" id="inputUsdValue" class="rounded bg-blue-200 py-2 px-2">
+              <button id="fundUsdButton" onclick="App.handleClickUsd()" class="rounded bg-blue-500 hover:bg-blue-700 py-2 px-2 text-white">
+                Fund!
+              </button>
+            </div> -->
+
+            <!-- Informativo sobre o último valor doado em ETH -->
+            <div id="lastFunded" class="flex-col items-center hidden">
+              <p  class="text-gray-800 text-sm">
+                <span>The last amount funded by users was</span>
+                <span id="ethLastFunded"></span>
+                <span>ETH</span>
+              </p>
+            </div>
+          </div>
+
+          
+          <!-- Área do proprietário do contrato -->
+          <div id="owner" class="hidden rounded bg-purple-100 flex flex-col justify-center content-center items-center py-2 px-4" style="margin-top: 1px;">
+            <!-- Saldo do contrato somente em ETH -->
+            <div class="flex-col py-2 items-center">
+              <p  class="text-gray-800 text-l">
+                <span>Your contract balance is:</span>
+                <span id="ethContractBalance"></span>
+                <span>ETH</span>
+              </p>
+            </div>
+            <!-- Saldo do contrato em ETH e USD -->
+            <!-- <div class="flex-col py-2 items-center">
+              <p  class="text-gray-800 text-l">
+                <span>Your contract balance is:</span>
+                <span id="ethContractBalance"></span>
+                <span>ETH - (US$</span>
+                <span id="usdContractBalance"></span>
+                <span>)</span>
+              </p>
+            </div> -->
+
+            <!-- Área de consulta de montante doado por endereço -->
+            <div class="rounded bg-purple-200 flex flex-col w-full h-full justify-center content-center items-center py-1 px-2">
+              
+              <!-- Usuário clicou em consultar: barra de carregamento -->
+              <div id="consultPending" class="hidden placeholder-item flex w-full h-auto justify-center content-center items-center py-2 m-1">
+                Pending...
+              </div>
+              
+              <!-- Formulário para consultar montante doado por endereço -->
+              <div id="consultAddressContent" class="w-full flex py-1 justify-between">
+                <!-- Label: insira um endereço -->
+                <label id="inputAmountByAddressLabel" for="inputAmountByAddress" class="pt-2 px-1 align-middle text-sm">
+                  Input Address:
+                </label>
+                <!-- Input box para o usuário inserir o endereço desejado -->
+                <input type="text" id="inputAmountByAddress" class="rounded py-2 px-2">
+                <!-- Botão para consultar montante doado por endereço -->
+                <button id="consultButton" onclick="App.handleClickFind()" class="rounded bg-gray-400 hover:bg-gray-700 py-2 px-2 text-white">
+                  Consult
+                </button>
+              </div>
+
+              <!-- Área para mostrar o resultado da consulta pelo montante doado -->
+              <div id="amountFundedText" class="hidden rounded flex justify-center content-center items-center" style="margin-top: 5px; border: 1px solid black;">
+                <!-- Saldo da doação do respectivo endereço em somente ETH -->
+                <p class="text-gray-800 text-sm">
+                  <span>This address has funded:</span>
+                  <span id="ethFundAmount"></span>
+                  <span>ETH</span>
+                </p>
+                <!-- Saldo da doação do respectivo endereço em ETH e USD -->
+                <!-- <p class="text-gray-800 text-sm">
+                  <span>This address has funded:</span>
+                  <span id="ethFundAmount"></span>
+                  <span>ETH - (US$</span>
+                  <span id="usdFundAmount"></span>
+                  <span>)</span>
+                </p> -->
+                <!-- Botão para excluir o resultado da consulta -->
+                <a href="#" onclick="App.handleDeleteFundedBalance()" class="flex justify-center content-center items-center" >
+                  <span class="material-icons icons-list material-icons-outlined text-sm"  style="font-size: 21px;">
+                    delete
+                  </span>
+                </a>
+              </div>
+
+            </div>
+            
+            <!-- Usuário clicou em sacar: barra de carregamento -->
+            <div id="withdrawPending" class="hidden placeholder-item flex w-full h-auto justify-center content-center items-center py-2 m-1">
+              Pending...
+            </div>
+
+            <!-- Botão de saque -->
+            <div id="withdrawContent" class=" flex w-full h-full justify-center content-center items-center py-1">
+              <button id="withdrawFundsButton" onclick="App.handleClickWithdraw()" class="rounded w-full h-full bg-purple-500 hover:bg-purple-700 py-2 px-4 text-white">
+                Withdraw All Funds
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
